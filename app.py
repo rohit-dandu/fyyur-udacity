@@ -116,9 +116,18 @@ def index():
 def venues():
   # TODO: replace with real venues data.
   #       num_shows should be aggregated based on number of upcoming shows per venue.
-
+  venues = Venue.query.all()
   data = []
-  
+  areas = Venue.query.distinct(Venue.city, Venue.state).all()
+  for area in areas:
+    data.append({
+      'city': area.city,
+      'state': area.state,
+      'venues': [{
+        'id': venue.id,
+        'name': venue.name,
+      } for venue in venues if venue.city == area.city and venue.state == area.state]
+    })
   return render_template('pages/venues.html', areas=data);
 
 @app.route('/venues/search', methods=['POST'])
@@ -128,11 +137,11 @@ def search_venues():
   data = []
 
   for r in search_results:
-    temp = {}
-    temp['id'] = r.id,
-    temp['name'] = r.name,
-    temp['num_upcoming_shows'] = len(db.session.query(Show).filter(Show.venue_id == r.id).filter(Show.start_time >= datetime.today()).all())
-    data.append(tmp)
+    data.append({
+      'id': r.id,
+      'name': r.name,
+      'num_upcoming_shows': len(db.session.query(Show).filter(Show.venue_id == r.id).filter(Show.start_time >= datetime.today()).all())
+    })
   # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
   # seach for Hop should return "The Musical Hop".
   # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
@@ -174,7 +183,7 @@ def show_venue(venue_id):
     'id': venue.id,
     'name': venue.name,
     'genres': venue.genres.split(','),
-    'address': venue.address
+    'address': venue.address,
     'city': venue.city,
     'state': venue.state,
     'phone': venue.phone,
@@ -368,17 +377,17 @@ def edit_venue(venue_id):
   form = VenueForm()
   venue = Venue.query.get(venue_id)
   if venue:
-    form['name'] = venue.name
-    form['city'] = venue.city
-    form['state'] = venue.state
-    form['phone'] = venue.phone
-    form['address'] = venue.address
-    form['genres'] = venue.genres.split(',')
-    form['facebook_link'] = venue.facebook_link
-    form['image_link'] = venue.image_link
-    form['website_link'] = venue.website
-    form['seeking_talent'] = venue.seeking_talent
-    form['seeking_description'] = venue.seeking_description
+    venue.name = form['name']
+    venue.city = form['city']
+    venue.state = form['state']
+    venue.phone = form['phone']
+    venue.address = form['address']
+    venue.genres = ','.join(request.form.getlist('genres'))
+    venue.facebook_link = form['facebook_link']
+    venue.image_link = form['image_link']
+    venue.website = form['website_link']
+    venue.seeking_talent = form['seeking_talent']
+    venue.seeking_description = form['seeking_description']
   # TODO: populate form with values from venue with ID <venue_id>
   return render_template('forms/edit_venue.html', form=form, venue=venue)
 
