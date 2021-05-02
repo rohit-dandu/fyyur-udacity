@@ -116,6 +116,7 @@ def index():
 def venues():
   # TODO: replace with real venues data.
   #       num_shows should be aggregated based on number of upcoming shows per venue.
+  # Reference: https://knowledge.udacity.com/questions/421071
   venues = Venue.query.all()
   data = []
   areas = Venue.query.distinct(Venue.city, Venue.state).all()
